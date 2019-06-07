@@ -163,8 +163,10 @@ OPTIONS\n\
 		}
 		mod_infos = realloc(mod_infos, (++nr_mod_infos *
 			sizeof(struct mod_info)));
+		memset(&mod_infos[nr_mod_infos - 1], 0,
+			sizeof(struct mod_info));
 		mod_infos [nr_mod_infos - 1] = m;
-
+		memset(&m, 0, sizeof(struct mod_info));
 	}
 	fclose(f);
 
