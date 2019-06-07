@@ -4,9 +4,11 @@
 #include <sysexits.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 #define MODS_FILE "/proc/modules"
-#define MODS_FILE_READ_FMT "%ms %lu %lu %ms %ms 0x%lx"
+#define MODS_FILE_READ_FMT "%ms %lu %lu %ms %ms 0x%lx\n"
 #define SPACING "%-17"
 #define MODS_FILE_PRINT_FMT SPACING"s" SPACING"lu" SPACING"lu" SPACING"s""\n"
 
@@ -143,24 +145,36 @@ OPTIONS\n\
 			sort_mod_info = sort_by_nr_users_dsc;
 	}
 
+	struct mod_info m = {0};
 	FILE *f = fopen(MODS_FILE, "r");
 	if (!f) {
 		perror(MODS_FILE);
 		return EX_IOERR;
 	}
 
-	struct mod_info m = {0};
-	while (fscanf(f, MODS_FILE_READ_FMT, &m.name, &m.size,
-		&m.nr_users, &m.users, &m.status, &m.load_addr) != EOF) {
-		/*TODO i have no clue WTH this entry shows up,
-		INVESTIGATE*/
-		if (!strcmp(m.name, "(OE)")) {
-			free(m.name);
-			if(m.status)
-				free(m.status);
-			if (m.users)
-				free(m.users);
-			continue;
+	char *line = NULL;
+	size_t n = 0;
+	while(getline(&line, &n, f)> 0) {
+		char *tok = strtok(line, " ");
+		int tc = 1;
+		while(tok) {
+			switch(tc) {
+			case 1:
+				m.name = strdup(tok);
+				break;
+			case 2:
+				m.size = atol(tok);
+				break;
+			case 3:
+				m.nr_users = atol(tok);
+				break;
+			case 4:
+				m.users = strdup(tok);
+				break;
+			}
+			tok = strtok(NULL, " ");
+			if (++tc > 4)
+				break;
 		}
 		mod_infos = realloc(mod_infos, (++nr_mod_infos *
 			sizeof(struct mod_info)));
@@ -169,6 +183,8 @@ OPTIONS\n\
 		mod_infos [nr_mod_infos - 1] = m;
 		memset(&m, 0, sizeof(struct mod_info));
 	}
+
+	free(line);
 	fclose(f);
 
 	qsort(mod_infos, nr_mod_infos, sizeof(struct mod_info), sort_func);
@@ -190,7 +206,6 @@ OPTIONS\n\
 
 	if (mod_infos)
 		free(mod_infos);
-
 	return 0;
 
 pr_usage_exit:
