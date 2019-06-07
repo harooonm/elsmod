@@ -117,9 +117,10 @@ OPTIONS\n\
 				goto pr_usage_exit;
 			break;
 		case 'h':
-		default:
 			fprintf(stderr, "%s", usage);
 			return 0;
+		default:
+			goto pr_usage_exit;
 		}
 	}
 
