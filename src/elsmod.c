@@ -79,7 +79,8 @@ int main(int argc, char ** argv)
 OPTIONS\n\
 -f x,    sort by field name [n = name, s = size, u = num users] default n\n\
 -o x,    order of sorting [a = ascending, d = descending] default a\n\
--u x,    display units of size [b = bytes, k = KB, m = MB] default b\n";
+-u x,    display units of size [b = bytes, k = KB, m = MB] default b\n\
+-h  ,    print help and exit\n";
 
 	while((optc = getopt(argc,argv, "f::o::u::h")) != -1){
 		switch(optc){
